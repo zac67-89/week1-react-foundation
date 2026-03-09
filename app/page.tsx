@@ -63,3 +63,5 @@ export default function Home() {
     </div>
   );
 }
+
+// Initialized Project
