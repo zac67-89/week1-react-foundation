@@ -1,10 +1,14 @@
-import UserCard from "@/components/UserCard";
+import Navbar from "@/components/Navbar";
+import ProductCard from "@/components/ProductCard";
+import Counter from "@/components/Counter";
 
 export default function Home() {
   return (
     <div>
-      <UserCard name="John Doe" age={35} />
-      <UserCard name="Alice" age={23} />
+      <Navbar />
+      <ProductCard name="Laptop" price={999} />
+      <ProductCard name="Smartphone" price={499} />
+      <Counter />
     </div>
-  );
+  )
 }
