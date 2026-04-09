@@ -1,17 +1,23 @@
-"use client";
-import { useState } from "react";
+type TaskInputProps = {
+  tasks: string;
+  setInput: (tasks: string) => void;
+  addTask: () => void;
+};
 
-export default function TaskInput() {
-  const [tasks, setTasks] = useState("");
+export default function TaskInput({
+  tasks,
+  setInput,
+  addTask,
+}: TaskInputProps) {
   return (
     <div>
       <input
         type="text"
         value={tasks}
-        onChange={(e) => setTasks(e.target.value)}
+        onChange={(e) => setInput(e.target.value)}
         placeholder="Enter Task"
       />
-      <h2>{tasks}</h2>
+      <button onClick={addTask}>Add Task</button>
     </div>
   );
 }

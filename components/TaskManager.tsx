@@ -1,26 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
+import TaskInput from "./TaskInput";
+import TaskList from "./TaskList";
+import { Task } from "@/types/task";
+import { loadTasks, saveTasks } from "@/utils/storage";
 
-const LOCAL_STORAGE_KEY = "task_manager_tasks";
 
 export default function TaskManger() {
-  type Task = {
-    item: string;
-    completed: boolean;
-  };
-
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    if (typeof window !== "undefined") {
-      const storedTasks = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return storedTasks ? JSON.parse(storedTasks) : [];
-    }
-    return [];
-  });
+  const [tasks, setTasks] = useState<Task[]>(loadTasks
+  );
   const [input, setInput] = useState<string>("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Wrapping in a timeout removes the "Synchronous" part of the error
     const timeout = setTimeout(() => {
       setMounted(true);
     }, 0);
@@ -29,27 +21,35 @@ export default function TaskManger() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tasks));
+   saveTasks(tasks);
   }, [tasks]);
+
   const addTask = () => {
-    if (input.trim() === "" || input.trim() === null) return;
-    const checkTasks = tasks.filter((task) => task.item === input.trim());
-    return (
-      checkTasks.length > 0
-        ? alert("Task already exists")
-        : setTasks([...tasks, { item: input, completed: false }]),
-      setInput("")
-    );
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    const existed = tasks.some((task) => task.item === trimmed);
+    if (existed) {
+      alert("Task already exists");
+      return;
+    }
+
+    const newTask = {
+      id: crypto.randomUUID(),
+      item: trimmed,
+      completed: false,
+    };
+
+    setTasks((prev) => [...prev, newTask]);
+    setInput("");
   };
 
-  const deleteTask = (index: number) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter((task) => task.id !== id));
   };
 
-  const toggleTask = (index: number) => {
-    const newTasks = [...tasks];
-    newTasks[index].completed = !newTasks[index].completed;
-    setTasks(newTasks);
+  const toggleTask = (id: string) => {
+    setTasks((prev) => prev.map((task) => task.id === id ? { ...task, completed: !task.completed } : task));
   };
 
   if (!mounted) return null;
@@ -59,28 +59,8 @@ export default function TaskManger() {
       <h2>Task Count: {tasks.length}</h2>
       <button onClick={() => setTasks([])}>Clear All</button>
       <br />
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
-      <button onClick={addTask}>Add Task</button>
-      <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>
-            <span
-              onClick={() => toggleTask(index)}
-              style={{
-                textDecoration: task.completed ? "line-through" : "none",
-                cursor: "pointer",
-              }}
-            >
-              {task.item}
-            </span>
-            <button onClick={() => deleteTask(index)}>X</button>
-          </li>
-        ))}
-      </ul>
+      <TaskInput tasks={input} setInput={setInput} addTask={addTask} />
+      <TaskList tasks={tasks} toggleTask={toggleTask} deleteTask={deleteTask} />
     </div>
   );
 }
